@@ -1,0 +1,21 @@
+#Clean up stuff
+into device label _T_0 set_label begin T_0 end;
+into device label _T_1 set_label begin T_1 end;
+into device label _T_2 set_label begin T_2 end;
+into device label _T_3 set_label begin T_3 end;
+into device label _T_4 set_label begin T_4 end;
+into device label _T_5 set_label begin T_5 end;
+into device label _T_6 set_label begin T_6 end;
+into device label _T_7 set_label begin T_7 end;
+into device label _T_8 set_label begin T_8 end;
+into device label _T_9 set_label begin T_9 end;
+into_all all code_regex _T_0 replaceall_matched begin T_0 end;
+into_all all code_regex _T_1 replaceall_matched begin T_1 end;
+into_all all code_regex _T_2 replaceall_matched begin T_2 end;
+into_all all code_regex _T_3 replaceall_matched begin T_3 end;
+into_all all code_regex _T_4 replaceall_matched begin T_4 end;
+into_all all code_regex _T_5 replaceall_matched begin T_5 end;
+into_all all code_regex _T_6 replaceall_matched begin T_6 end;
+into_all all code_regex _T_7 replaceall_matched begin T_7 end;
+into_all all code_regex _T_8 replaceall_matched begin T_8 end;
+into_all all code_regex _T_9 replaceall_matched begin T_9 end;

@@ -1,0 +1,294 @@
+# Patch by EMlyDinEsH (www.osxlatitude.com)
+# Enables Asus Ambient Light Sensor to work using my AsusNBFnKeys driver
+
+# Modify method RALS which reads ALS to work with my driver
+into Method label RALS replace_content begin
+                If (ALAE)\n
+                {\n
+                    Store (RRAM (0x02A3), Local0)\n
+                    Store (RRAM (0x02A4), Local1)\n
+                    ShiftLeft (Local0, 0x08, Local0)\n
+                    Add (Local0, Local1, Local0)\n
+                    Multiply (Local0, 0x03E8, Local1)\n
+                    Divide (Local1, ALSA, Local2, Local3)\n
+                }\n
+                Else\n
+                {\n
+                    Return (0x012C)\n
+                }\n
+                Return (Local3)\n            
+ end;
+
+# Modify ALS notifier methods _QDD and _QCD methods to notify event
+into Method label _QDD replace_content begin
+             Notify (ALS, 0x80)\n
+             If (ATKP)\n
+             {\n
+                 ^^^^ATKD.IANE (0xC6)\n
+             }
+end;
+
+into Method label _QCD replace_content begin
+            Notify (ALS, 0x80)\n
+             If (ATKP)\n
+             {\n
+                 ^^^^ATKD.IANE (0xC7)\n
+             }
+end;
+
+# Insert method ALSS into ATKD device for reading ambient illuminance values in my driver
+into method label ALSS parent_label ATKD remove_entry;
+into device label ATKD insert begin
+Method (ALSS, 0, NotSerialized)\n
+            {\n
+                Return (^^PCI0.LPCB.EC0.RALS ())\n
+            }
+end;
+# Patch by EMlyDinEsH (www.osxlatitude.com)
+# Enables 16 keyboard backlight levels control to work using my kexts AsusNBFnKeys and Smart Touchpad
+# This patch meant for haswell notebooks.
+
+# Insert backlight off control sync field for Smart Touchpad and Asus Fn Keys driver
+into device label ATKD code_regex Name\s\(BOFF,\sZero\) remove_matched;
+into device label ATKD insert begin Name (BOFF, Zero) end;
+
+# Insert method SKBL for setting keyboard backlight level
+into method label SKBL parent_label ATKD remove_entry;
+into Device label ATKD insert begin
+Method (SKBL, 1, NotSerialized)\n
+            {\n
+                If (Or (LEqual (Arg0, 0xED), LEqual (Arg0, 0xFD)))\n
+                {\n
+                    If (And (LEqual (Arg0, 0xED), LEqual (BOFF, 0xEA)))\n
+                    {\n
+                        Store (Zero, Local0)\n
+                        Store (Arg0, BOFF)\n
+                    }\n
+                    Else\n
+                    {\n
+                        If (And (LEqual (Arg0, 0xFD), LEqual (BOFF, 0xFA)))\n
+                        {\n
+                            Store (Zero, Local0)\n
+                            Store (Arg0, BOFF)\n
+                        }\n
+                        Else\n
+                        {\n
+                            Return (BOFF)\n
+                        }\n
+                    }\n
+                }\n
+                Else\n
+                {\n
+                    If (Or (LEqual (Arg0, 0xEA), LEqual (Arg0, 0xFA)))\n
+                    {\n
+                        Store (KBLV, Local0)\n
+                        Store (Arg0, BOFF)\n
+                    }\n
+                    Else\n
+                    {\n
+                        Store (Arg0, Local0)\n
+                        Store (Arg0, KBLV)\n
+                    }\n
+                }\n
+
+                Store (DerefOf (Index (KBPW, Local0)), Local1)\n
+                ^^PCI0.LPCB.EC0.WRAM (0x04B1, Local1)\n
+                Return (Local0)\n
+            }\n
+end;
+
+# Insert keyboard backlight 16 levels buffer
+into device label ATKD code_regex Name\s\(KBPW,\sBuffer\s\(0x10\)\s*\n\s*\{\s*\/\*\s0000\s\*\/\s*0x00,\s0x11,\s0x22,\s0x33,\s0x44,\s0x55,\s0x66,\s0x77,\s*\/\*\s0008\s\*\/\s*\s0x88,\s0x99,\s0xAA,\s0xBB,\s0xCC,\s0xDD,\s0xEE,\s0xFF\s*\}\) remove_matched;
+into device label ATKD insert begin 
+Name (KBPW, Buffer (0x10)\n
+   {\n
+      0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF\n
+   })
+end;
+
+#into device label ATKD code_regex Name\s\(PWKB,\sBuffer\s\(0x04\)\s*\n\s*\{\s*0x00,\s0x55,\s0xAA,\s0xFF\s*\}\) remove_matched
+#into device label ATKD insert begin 
+#Name (PWKB, Buffer (0x10)\n
+#   {\n
+#      0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF\n
+#   })
+#end;
+
+
+# Insert method GKBL for reading keyboard backlight level
+into method label GKBL parent_label ATKD remove_entry;
+into Device label ATKD insert begin
+Method (GKBL, 1, NotSerialized)\n
+            {\n
+               If (LEqual (Arg0, 0xFF))\n
+                {\n
+                    Return (BOFF)\n
+                }\n
+
+                Return (KBLV)\n
+            }\n
+end;
+
+
+
+# Lid sleep fix for newer Asus laptops
+# Also fixes Fn+F7
+# Credits: Qwerty12 and fvl
+
+into device label EC0 insert
+begin
+Method (ECCM, 4, Serialized)\n
+{\n
+    If (ECAV ())\n
+    {\n
+        Acquire (MUEC, 0xFFFF)\n
+            Store (Arg0, CDT1)\n
+            Store (Arg1, CDT2)\n
+            Store (Arg2, CDT3)\n
+            Store (Arg3, CMD1)\n
+            Store (0x7F, Local0)\n
+            While (LAnd (Local0, CMD1))\n
+            {\n
+                Sleep (One)\n
+                    Decrement (Local0)\n
+            }\n
+\n
+        If (LEqual (CMD1, Zero))\n
+        {\n
+            Store (CDT1, Local0)\n
+        }\n
+        Else\n
+        {\n
+            Store (Ones, Local0)\n
+        }\n
+\n
+        Release (MUEC)\n
+            Return (Local0)\n
+    }\n
+\n
+    Return (Ones)\n
+}\n
+\n
+Method (RPUN, 1, Serialized)\n
+{\n
+    Return (ECCM (0x87, Zero, Arg0, 0xB6))\n
+}\n
+\n
+Method (SPUN, 2, Serialized)\n
+{\n
+    If (Arg1)\n
+    {\n
+        ECCM (0x87, 0x20, Arg0, 0xB6)\n
+    }\n
+    Else\n
+    {\n
+        ECCM (0x87, 0x40, Arg0, 0xB6)\n
+    }\n
+}\n
+end;
+
+# Use newly defined methods to enable lid sleep
+into method label GLID code_regex RPIN replaceall_matched begin RPUN end;
+into method label _LID code_regex RPIN replaceall_matched begin RPUN end;
+# Enable Fn+F7 to turn on/off display
+into method label _Q10 code_regex RPIN replaceall_matched begin RPUN end;
+into method label _Q10 code_regex SPIN replaceall_matched begin SPUN end;
+
+# Patch by EMlyDinEsH (www.osxlatitude.com)
+# Enables Asus Fn keys to work as Function keys using my kext AsusNBFnKeys
+
+# Replacing method _Q0A for F1 key to work
+into Method label _Q0A replace_content begin 
+             If (ATKP)\n
+                {\n
+                   \_SB.ATKD.IANE (0x5E)\n
+                }
+end;
+
+# Replacing method _Q0B for F2 key to work
+into Method label _Q0B replace_content begin 
+             If (ATKP)\n
+                {\n
+                   \_SB.ATKD.IANE (0x7D)\n
+                }
+end;
+
+# Replacing method _Q0C for F3 key to work
+into Method label _Q0C replace_content begin 
+             If (ATKP)\n
+                {\n
+                   \_SB.ATKD.IANE (0x50)\n
+                }
+end;
+
+# Replacing method _Q0D for F4 key to work
+into Method label _Q0D replace_content begin 
+             If (ATKP)\n
+                {\n
+                   \_SB.ATKD.IANE (0x51)\n
+                }
+end;
+
+# Replacing method _Q0E for F5 key to work
+into Method label _Q0E replace_content begin 
+             If (ATKP)\n
+                {\n
+                   \_SB.ATKD.IANE (0x20)\n
+                }
+end;
+
+# Replacing method _Q0F for F6 key to work
+into Method label _Q0F replace_content begin 
+             If (ATKP)\n
+                {\n
+                   \_SB.ATKD.IANE (0x10)\n
+                }
+end;
+
+# Replacing method _Q10 for F7 key to work
+into Method label _Q10 replace_content begin 
+             If (ATKP)\n
+                {\n
+                   \_SB.ATKD.IANE (0x35)\n
+                }
+end;
+
+# Replacing method _Q11 for F8 key to work
+into Method label _Q11 replace_content begin 
+             If (ATKP)\n
+                {\n
+                   \_SB.ATKD.IANE (0x61)\n
+                }
+end;
+
+# Replacing method _Q12 for F9 key to work
+into Method label _Q12 replace_content begin 
+             If (ATKP)\n
+                {\n
+                   \_SB.ATKD.IANE (0x6B)\n
+                }
+end;
+
+# Replacing method _Q13 for F10 key to work
+into Method label _Q13 replace_content begin 
+             If (ATKP)\n
+                {\n
+                   \_SB.ATKD.IANE (0x32)\n
+                }
+end;
+
+# Replacing method _Q14 for F11 key to work
+into Method label _Q14 replace_content begin 
+             If (ATKP)\n
+                {\n
+                   \_SB.ATKD.IANE (0x31)\n
+                }
+end;
+
+# Replacing method _Q15 for F12 key to work
+into Method label _Q15 replace_content begin 
+             If (ATKP)\n
+                {\n
+                   \_SB.ATKD.IANE (0x30)\n
+                }
+end;
