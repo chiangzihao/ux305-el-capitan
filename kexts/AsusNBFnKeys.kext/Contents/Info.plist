@@ -68,7 +68,7 @@
 					<key>EnableALSLogs</key>
 					<false/>
 					<key>EnableAtBoot</key>
-					<true/>
+					<false/>
 					<key>Level1Brightness</key>
 					<integer>20</integer>
 					<key>Level1RangeEnd</key>
