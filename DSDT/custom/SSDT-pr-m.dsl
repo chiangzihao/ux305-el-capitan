@@ -18,7 +18,7 @@
  *     Compiler ID      "INTL"
  *     Compiler Version 0x20140926 (538183974)
  */
-DefinitionBlock ("iASLFUCKHo.aml", "SSDT", 1, "APPLE ", "CpuPm", 0x00016500)
+DefinitionBlock ("ssdt.aml", "SSDT", 1, "APPLE ", "CpuPm", 0x00016500)
 {
 
     External (_PR_.CPU0, DeviceObj)
