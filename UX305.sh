@@ -111,8 +111,8 @@ patch_dsdt()
 	echo "${BOLD}[usb] Fix USB _PRW${OFF}"
 	./tools/patchmatic ./DSDT/decompiled/DSDT.dsl ./DSDT/patches/usb.txt ./DSDT/decompiled/DSDT.dsl
 
-	echo "${BOLD}[gfx] HD5500${OFF}"
-	./tools/patchmatic ./DSDT/decompiled/DSDT.dsl ./DSDT/patches/hd5500.txt ./DSDT/decompiled/DSDT.dsl
+	echo "${BOLD}[gfx] Broadwell Backlight, HDAU Layout 3${OFF}"
+	./tools/patchmatic ./DSDT/decompiled/DSDT.dsl ./DSDT/patches/broadwell_gfx.txt ./DSDT/decompiled/DSDT.dsl
 
 	echo "${BOLD}[sys] HPET${OFF}"
 	./tools/patchmatic ./DSDT/decompiled/DSDT.dsl ./DSDT/patches/hpet.txt ./DSDT/decompiled/DSDT.dsl	
