@@ -184,11 +184,18 @@ compile_dsdt()
 	# ssdtPRgen (P-states / C-states)
 	echo "${BLUE}[PRgen]${OFF}: Compiling ssdtPRgen to ./DSDT/compiled"
 	
+	#UX305LA i5
 	if [[ `sysctl machdep.cpu.brand_string` == *"i5-5200U"* ]]
 	then
 		echo "${BLUE}[PRgen]${OFF}: Intel ${BOLD}i5-5200U${OFF} processor found"
-		./tools/iasl -vr -w1 -ve -p ./DSDT/compiled/SSDT-pr.aml ./DSDT/custom/SSDT-pr.dsl
+		./tools/iasl -vr -w1 -ve -p ./DSDT/compiled/SSDT-pr.aml ./DSDT/custom/SSDT-pr-i5.dsl
 	fi
+	#UX305FA Core M
+	if [[ `sysctl machdep.cpu.brand_string` == *"M-5Y10c"* ]]
+	then
+		echo "${BLUE}[PRgen]${OFF}: Intel ${BOLD}i5-5200U${OFF} processor found"
+		./tools/iasl -vr -w1 -ve -p ./DSDT/compiled/SSDT-pr.aml ./DSDT/custom/SSDT-pr-m.dsl
+	fi	
 	
 	# Rehabman NullEthernet.kext
 	echo "${BLUE}[RMNE]${OFF}: Compiling SSDT-rmne to ./DSDT/compiled"
@@ -210,7 +217,7 @@ RETVAL=0
 if [[ gID -ne 0 ]];
   then
     clear
-    echo "${RED}${BOLD}This script must be run as root!${OFF}"
+    echo "${RED}${BOLD}[Warning] This script must be run as root!${OFF}"
     sudo "$0" "$@"
 else
 	case "$1" in
@@ -249,7 +256,7 @@ else
 			fi
 			if [ $model_detected -eq 0 ]
 			then
-			  echo "Unsupported model"
+			  echo "${RED}${BOLD}[Warning] Model not detected. Generated SSDT files and installed kexts will be incomplete.${OFF}"
 			fi
 			echo "${BOLD}Asus UX305LA/UX305FA${OFF} - El Capitan 10.11 - https://bitbucket.org/spigots/ux305-el-capitan"
 			echo
