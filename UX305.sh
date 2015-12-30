@@ -6,6 +6,7 @@ RED="\033[0;31m"
 GREEN="\033[0;32m"
 BLUE="\033[1;34m"
 OFF="\033[m"
+let gID=$(id -u)
 
 # Repository location
 REPO=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
@@ -68,7 +69,7 @@ patch_dsdt()
 
 	echo "${BLUE}[DSDT]${OFF}: Patching DSDT in ./DSDT/decompiled"
 
-	echo "${BOLD}Compiler Cleanup${OFF}"
+	echo "${BOLD}[syn] Compiler Cleanup${OFF}"
 	./tools/patchmatic ./DSDT/decompiled/DSDT.dsl ./DSDT/patches/cleanup.txt ./DSDT/decompiled/DSDT.dsl
 
 	
@@ -137,7 +138,7 @@ patch_dsdt()
 	echo "${BLUE}[SSDT-DptfTabl]${OFF}: Patching ${SSDT_DptfTabl}"
 	perl -p -i -e "s/External \(_SB_.PCI0.PEG0.PEGP.SGPO, MethodObj\)//g" ${SSDT_DptfTabl}
 
-	echo "${BOLD}Compiler Cleanup${OFF}"
+	echo "${BOLD}[syn] Compiler Cleanup${OFF}"
 	./tools/patchmatic ${SSDT_DptfTabl} ./DSDT/patches/cleanup.txt ${SSDT_DptfTabl}
 
 
@@ -149,14 +150,12 @@ patch_dsdt()
 	########################
 
 	echo "${BLUE}[SSDT-SaSsdt]${OFF}: Patching ${SSDT_SaSsdt}"
-
-	echo "${BOLD}[syn] Syntax Fixes${OFF}"
 	perl -p -i -e "s/External \(_SB_.PCI0, DeviceObj\)//g" ${SSDT_SaSsdt}
 	perl -p -i -e "s/External \(_SB_.PCI0.PEG0, DeviceObj\)//g" ${SSDT_SaSsdt}
 	perl -p -i -e "s/External \(_SB_.PCI0.PEG0.PEGP, DeviceObj\)//g" ${SSDT_SaSsdt}
 	perl -p -i -e "s/External \(_SB_.PCI0.PEG0.PEGP.SGPO, MethodObj\)/External \(_SB_.PCI0, DeviceObj\) External \(_SB_.PCI0.PEG0, DeviceObj\) External \(_SB_.PCI0.PEG0.PEGP, DeviceObj\) External \(_SB_.PCI0.PEG0.PEGP.SGPO, MethodObj\)/g" ${SSDT_SaSsdt}
 
-	echo "${BOLD}Compiler Cleanup${OFF}"
+	echo "${BOLD}[syn] Compiler Cleanup${OFF}"
 	./tools/patchmatic ${SSDT_SaSsdt} ./DSDT/patches/cleanup.txt ${SSDT_SaSsdt}
 }
 
@@ -208,54 +207,66 @@ patch_hda()
 
 RETVAL=0
 
-case "$1" in
-	--update)
-		git_update
-		RETVAL=1
-		;;
-	--decompile-dsdt)
-		decompile_dsdt
-		RETVAL=1
-		;;
-	--compile-dsdt)
-		compile_dsdt
-		RETVAL=1
-		;;
-	--patch-dsdt)
-		patch_dsdt
-		RETVAL=1
-		;;
-	--patch-hda)
-		patch_hda
-		RETVAL=1
-		;;
-	*)
+if [[ gID -ne 0 ]];
+  then
+    clear
+    echo "${RED}${BOLD}This script must be run as root!${OFF}"
+    sudo "$0" "$@"
+else
+	case "$1" in
+		--update)
+			git_update
+			RETVAL=1
+			;;
+		--decompile-dsdt)
+			decompile_dsdt
+			RETVAL=1
+			;;
+		--compile-dsdt)
+			compile_dsdt
+			RETVAL=1
+			;;
+		--patch-dsdt)
+			patch_dsdt
+			RETVAL=1
+			;;
+		--patch-hda)
+			patch_hda
+			RETVAL=1
+			;;
+		*)
+			clear
+			model_detected=0
+			if [[ `sysctl machdep.cpu.brand_string` == *"i5-5200U"* ]]
+			then
+				model_detected=1
+				echo "${GREEN}${BOLD}Model Detected: Asus UX305LA (i5-5200U CPU @ 2.20GHz)${OFF}"
+			fi
+			if [[ `sysctl machdep.cpu.brand_string` == *"M-5Y10c"* ]]
+			then
+				model_detected=1
+				echo "${GREEN}${BOLD}Model Detected: Asus UX305FA (M-5Y10c CPU @ 0.80GHz)${OFF}"
+			fi
+			if [ $model_detected -eq 0 ]
+			then
+			  echo "Unsupported model"
+			fi
+			echo "${BOLD}Asus UX305LA/UX305FA${OFF} - El Capitan 10.11 - https://bitbucket.org/spigots/ux305-el-capitan"
+			echo
+			echo "\t${BOLD}--update${OFF}: Update to latest version"
+			echo "\t${BOLD}--decompile-dsdt${OFF}: Decompile DSDT files in ./DSDT/raw"
+			echo "\t${BOLD}--patch-dsdt${OFF}: Patch DSDT files in ./DSDT/decompiled"
+			echo "\t${BOLD}--compile-dsdt${OFF}: Compile DSDT files to ./DSDT/compiled"	
+			echo
+			echo "${BOLD}Credits:"
+			echo "${BLUE}Laptop-DSDT${OFF}: https://github.com/RehabMan/Laptop-DSDT-Patch"
+			echo "${BLUE}ssdtPRgen${OFF}: https://github.com/Piker-Alpha/ssdtPRGen.sh"
+			echo "${BLUE}AppleHDA CX20752${OFF}: https://github.com/Mirone/AppleHDAPatcher"
+			echo "${BLUE}XPS9530-OSX Script${OFF}: https://github.com/the-darkvoid/XPS9530-OSX"
+			echo
+			RETVAL=1
+		    ;;
+	esac
 
-		echo
-		if [[ `sysctl machdep.cpu.brand_string` == *"i5-5200U"* ]]
-		then
-			echo "${GREEN}${BOLD}Model Detected: Asus UX305LA (i5-5200U CPU @ 2.20GHz)${OFF}"
-		fi
-		echo
-		if [[ `sysctl machdep.cpu.brand_string` == *"M-5Y10c"* ]]
-		then
-			echo "${GREEN}${BOLD}Model Detected: Asus UX305FA (M-5Y10c CPU @ 0.80GHz)${OFF}"
-		fi			
-		echo "${BOLD}Asus UX305LA/UX305FA${OFF} - El Capitan 10.11 - https://bitbucket.org/spigots/ux305-el-capitan"
-		echo
-		echo "\t${BOLD}--update${OFF}: Update to latest version"
-		echo "\t${BOLD}--decompile-dsdt${OFF}: Decompile DSDT files in ./DSDT/raw"
-		echo "\t${BOLD}--patch-dsdt${OFF}: Patch DSDT files in ./DSDT/decompiled"
-		echo "\t${BOLD}--compile-dsdt${OFF}: Compile DSDT files to ./DSDT/compiled"	
-		echo
-		echo "${BOLD}Credits:"
-		echo "${BLUE}Laptop-DSDT${OFF}: https://github.com/RehabMan/Laptop-DSDT-Patch"
-		echo "${BLUE}ssdtPRgen${OFF}: https://github.com/Piker-Alpha/ssdtPRGen.sh"
-		echo "${BLUE}AppleHDA CX20752${OFF}: https://github.com/Mirone/AppleHDAPatcher"
-		echo "${BLUE}XPS9530-OSX Script${OFF}: https://github.com/the-darkvoid/XPS9530-OSX"
-		echo
-		RETVAL=1
-	    ;;
-esac
-
-exit $RETVAL
+	exit $RETVAL
+fi
