@@ -251,7 +251,8 @@ case "$1" in
 		echo "${BOLD}Credits:"
 		echo "${BLUE}Laptop-DSDT${OFF}: https://github.com/RehabMan/Laptop-DSDT-Patch"
 		echo "${BLUE}ssdtPRgen${OFF}: https://github.com/Piker-Alpha/ssdtPRGen.sh"
-		echo "${BLUE}AppleHDA CX20752${OFF}: https://github.com/vbourachot/Dell-XPS13-9333-DSDT-Patch/"
+		echo "${BLUE}AppleHDA CX20752${OFF}: https://github.com/Mirone/AppleHDAPatcher"
+		echo "${BLUE}XPS9530-OSX Script${OFF}: https://github.com/the-darkvoid/XPS9530-OSX"
 		echo
 		RETVAL=1
 	    ;;
