@@ -172,34 +172,39 @@ compile_dsdt()
 	grep -L "DptfTabl\|SaSsdt\|Cpu0Ist\|CpuSsdt\|CppcTabl\|Cpc_Tabl" ./DSDT/raw/SSDT-[0-9].aml ./DSDT/raw/SSDT-[1-9][0-9].aml | xargs -I{} cp -v {} ./DSDT/compiled
 
 	echo "${BLUE}[DSDT]${OFF}: Compiling DSDT to ./DSDT/compiled"
-	./tools/iasl -vr -w1 -ve -p ./DSDT/compiled/DSDT.aml -I ./DSDT/decompiled/ ./DSDT/decompiled/DSDT.dsl
+	./tools/iasl -vr -w1 -ve -p ./DSDT/compiled/DSDT.aml -I ./DSDT/decompiled/ ./DSDT/decompiled/DSDT.dsl | tail -1
 
 	echo "${BLUE}[SSDT-10]${OFF}: Compiling SSDT-DptfTabl to ./DSDT/compiled"
-	./tools/iasl -vr -w1 -ve -p ./DSDT/compiled/`basename -s dsl ${SSDT_DptfTabl}`aml -I ./DSDT/decompiled/ ${SSDT_DptfTabl}
+	./tools/iasl -vr -w1 -ve -p ./DSDT/compiled/`basename -s dsl ${SSDT_DptfTabl}`aml -I ./DSDT/decompiled/ ${SSDT_DptfTabl} | tail -1
 
 	echo "${BLUE}[SSDT-12]${OFF}: Compiling SSDT-SaSsdt to ./DSDT/compiled"
-	./tools/iasl -vr -w1 -ve -p ./DSDT/compiled/`basename -s dsl ${SSDT_SaSsdt}`aml -I ./DSDT/decompiled/ ${SSDT_SaSsdt}
+	./tools/iasl -vr -w1 -ve -p ./DSDT/compiled/`basename -s dsl ${SSDT_SaSsdt}`aml -I ./DSDT/decompiled/ ${SSDT_SaSsdt} | tail -1
 
 	# Additional custom SSDT
 	# ssdtPRgen (P-states / C-states)
 	echo "${BLUE}[PRgen]${OFF}: Compiling ssdtPRgen to ./DSDT/compiled"
-	
+	prgen=0
 	#UX305LA i5
 	if [[ `sysctl machdep.cpu.brand_string` == *"i5-5200U"* ]]
 	then
 		echo "${BLUE}[PRgen]${OFF}: Intel ${BOLD}i5-5200U${OFF} processor found"
-		./tools/iasl -vr -w1 -ve -p ./DSDT/compiled/SSDT-pr.aml ./DSDT/custom/SSDT-pr-i5.dsl
+		./tools/iasl -vr -w1 -ve -p ./DSDT/compiled/SSDT-pr.aml ./DSDT/custom/SSDT-pr-i5.dsl | tail -1
+		prgen=1
 	fi
 	#UX305FA Core M
 	if [[ `sysctl machdep.cpu.brand_string` == *"M-5Y10c"* ]]
 	then
 		echo "${BLUE}[PRgen]${OFF}: Intel ${BOLD}i5-5200U${OFF} processor found"
-		./tools/iasl -vr -w1 -ve -p ./DSDT/compiled/SSDT-pr.aml ./DSDT/custom/SSDT-pr-m.dsl
+		./tools/iasl -vr -w1 -ve -p ./DSDT/compiled/SSDT-pr.aml ./DSDT/custom/SSDT-pr-m.dsl | tail -1
+		prgen=1
 	fi	
-	
+	if [ $prgen -eq 0 ]
+	then
+	  echo "${RED}${BOLD}[Warning] Unable to detect model. SSDT-pr.aml will not be generated.${OFF}"
+	fi	
 	# Rehabman NullEthernet.kext
 	echo "${BLUE}[RMNE]${OFF}: Compiling SSDT-rmne to ./DSDT/compiled"
-	./tools/iasl -vr -w1 -ve -p ./DSDT/compiled/SSDT-rmne.aml ./DSDT/custom/SSDT-rmne.dsl	
+	./tools/iasl -vr -w1 -ve -p ./DSDT/compiled/SSDT-rmne.aml ./DSDT/custom/SSDT-rmne.dsl | tail -1
 }
 
 patch_hda()
