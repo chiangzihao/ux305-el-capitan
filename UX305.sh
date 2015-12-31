@@ -230,7 +230,10 @@ install_kexts()
 	echo "       --> ${BOLD}Installed AsusNBFnKeys.kext to /System/Library/Extensions${OFF}"
 
 	sudo cp -r ./kexts/FakePCIID.kext /System/Library/Extensions
-	echo "       --> ${BOLD}Installed FakePCIID.kext to /System/Library/Extensions${OFF}"	
+	echo "       --> ${BOLD}Installed FakePCIID.kext to /System/Library/Extensions${OFF}"
+
+	sudo cp -r ./kexts/FakePCIID_XHCIMux.kext /System/Library/Extensions
+	echo "       --> ${BOLD}Installed FakePCIID_XHCIMux.kext to /System/Library/Extensions${OFF}"		
 
 	sudo cp -r ./kexts/IntelBacklight.kext /System/Library/Extensions
 	echo "       --> ${BOLD}Installed IntelBacklight.kext to /System/Library/Extensions${OFF}"
