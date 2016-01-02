@@ -191,6 +191,20 @@ compile_dsdt()
 		./tools/iasl -vr -w1 -ve -p ./DSDT/compiled/SSDT-pr.aml ./DSDT/custom/SSDT-pr-i5.dsl | tail -1
 		prgen=1
 	fi
+	#UX305LA i3
+	if [[ `sysctl machdep.cpu.brand_string` == *"i3-5010U"* ]]
+	then
+		echo "${BLUE}[PRgen]${OFF}: Intel ${BOLD}i3-5010U${OFF} processor found"
+		./tools/iasl -vr -w1 -ve -p ./DSDT/compiled/SSDT-pr.aml ./DSDT/custom/SSDT-pr-i3.dsl | tail -1
+		prgen=1
+	fi	
+	#UX305LA i7
+	if [[ `sysctl machdep.cpu.brand_string` == *"i7-5500U"* ]]
+	then
+		echo "${BLUE}[PRgen]${OFF}: Intel ${BOLD}i7-5500U${OFF} processor found"
+		./tools/iasl -vr -w1 -ve -p ./DSDT/compiled/SSDT-pr.aml ./DSDT/custom/SSDT-pr-i7.dsl | tail -1
+		prgen=1
+	fi	
 	#UX305FA Core M
 	if [[ `sysctl machdep.cpu.brand_string` == *"M-5Y10c"* ]]
 	then
@@ -296,8 +310,18 @@ else
 			if [[ `sysctl machdep.cpu.brand_string` == *"i5-5200U"* ]]
 			then
 				model_detected=1
-				echo "${GREEN}${BOLD}Model Detected: Asus UX305LA (i5-5200U CPU @ 2.20GHz)${OFF}"
+				echo "${GREEN}${BOLD}Model Detected: Asus UX305LA i5${OFF}"
 			fi
+			if [[ `sysctl machdep.cpu.brand_string` == *"i5-5200U"* ]]
+			then
+				model_detected=1
+				echo "${GREEN}${BOLD}Model Detected: Asus UX305LA i3${OFF}"
+			fi
+			if [[ `sysctl machdep.cpu.brand_string` == *"i7-5500U"* ]]
+			then
+				model_detected=1
+				echo "${GREEN}${BOLD}Model Detected: Asus UX305LA i7${OFF}"
+			fi						
 			if [[ `sysctl machdep.cpu.brand_string` == *"M-5Y10c"* ]]
 			then
 				model_detected=1
@@ -305,7 +329,7 @@ else
 			fi
 			if [ $model_detected -eq 0 ]
 			then
-			  echo "${RED}${BOLD}[Warning] Model not detected. Generated SSDT files and installed kexts will be incomplete.${OFF}"
+			  echo "${RED}${BOLD}[Warning] Supported model not detected. Generated SSDT files and installed kexts will be incomplete.${OFF}"
 			fi
 			echo "${BOLD}Asus UX305LA/UX305FA${OFF} - El Capitan 10.11 - https://bitbucket.org/spigots/ux305-el-capitan"
 			echo
