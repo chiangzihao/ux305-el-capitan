@@ -209,11 +209,11 @@ compile_dsdt()
 
 patch_hda()
 {
-	echo "${GREEN}[HDA]${OFF}: Creating AppleHDA injection kernel extension for ${BOLD}CX20752${OFF}"
-	sudo cp -r ./audio/UX305_AppleHDA.kext /Library/Extensions
-	echo "       --> ${BOLD}Installed UX305_AppleHDA.kext to /Library/Extensions${OFF}"
-	sudo cp -r ./audio/CodecCommander.kext /Library/Extensions
-	echo "       --> ${BOLD}Installed CodecCommander.kext to /Library/Extensions${OFF}"
+	echo "${GREEN}[HDA]${OFF}: Installing AppleHDA injection kernel extension for ${BOLD}CX20752${OFF}"
+	sudo cp -r ./audio/UX305_AppleHDA.kext /System/Library/Extensions
+	echo "       --> ${BOLD}Installed UX305_AppleHDA.kext to /System/Library/Extensions${OFF}"
+	sudo cp -r ./audio/CodecCommander.kext /System/Library/Extensions
+	echo "       --> ${BOLD}Installed CodecCommander.kext to /System/Library/Extensions${OFF}"
 }
 
 
