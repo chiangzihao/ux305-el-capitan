@@ -166,7 +166,7 @@ compile_dsdt()
 	
 	locate_ssdt ./DSDT/decompiled
 
-	rm ./DSDT/compiled/*
+	rm -rf ./DSDT/compiled/*
 	
 	echo "${BLUE}[SSDT]${OFF}: Copying untouched original SSDTs to ./DSDT/compiled"
 	grep -L "DptfTabl\|SaSsdt\|Cpu0Ist\|CpuSsdt\|CppcTabl\|Cpc_Tabl" ./DSDT/raw/SSDT-[0-9].aml ./DSDT/raw/SSDT-[1-9][0-9].aml | xargs -I{} cp -v {} ./DSDT/compiled
@@ -194,7 +194,7 @@ compile_dsdt()
 	#UX305FA Core M
 	if [[ `sysctl machdep.cpu.brand_string` == *"M-5Y10c"* ]]
 	then
-		echo "${BLUE}[PRgen]${OFF}: Intel ${BOLD}i5-5200U${OFF} processor found"
+		echo "${BLUE}[PRgen]${OFF}: Intel ${BOLD}M-5Y10c${OFF} processor found"
 		./tools/iasl -vr -w1 -ve -p ./DSDT/compiled/SSDT-pr.aml ./DSDT/custom/SSDT-pr-m.dsl | tail -1
 		prgen=1
 	fi	
@@ -209,13 +209,57 @@ compile_dsdt()
 
 patch_hda()
 {
-	echo "${GREEN}[HDA]${OFF}: Installing AppleHDA injection kernel extension for ${BOLD}CX20752${OFF}"
+	echo "${GREEN}[HDA]${OFF}: Creating AppleHDA injection kernel extension for ${BOLD}CX20752${OFF}"
 	sudo cp -r ./audio/UX305_AppleHDA.kext /System/Library/Extensions
 	echo "       --> ${BOLD}Installed UX305_AppleHDA.kext to /System/Library/Extensions${OFF}"
 	sudo cp -r ./audio/CodecCommander.kext /System/Library/Extensions
 	echo "       --> ${BOLD}Installed CodecCommander.kext to /System/Library/Extensions${OFF}"
 }
 
+install_kexts()
+{
+	patch_hda
+
+	sudo cp -r ./kexts/ACPIBatteryManager.kext /System/Library/Extensions
+	echo "       --> ${BOLD}Installed ACPIBatteryManager.kext to /System/Library/Extensions${OFF}"
+
+	sudo cp -r ./kexts/ApplePS2SmartTouchPad.kext /System/Library/Extensions
+	echo "       --> ${BOLD}Installed ApplePS2SmartTouchPad.kext to /System/Library/Extensions${OFF}"
+
+	sudo cp -r ./kexts/AsusNBFnKeys.kext /System/Library/Extensions
+	echo "       --> ${BOLD}Installed AsusNBFnKeys.kext to /System/Library/Extensions${OFF}"
+
+	sudo cp -r ./kexts/FakePCIID.kext /System/Library/Extensions
+	echo "       --> ${BOLD}Installed FakePCIID.kext to /System/Library/Extensions${OFF}"
+
+	sudo cp -r ./kexts/FakePCIID_XHCIMux.kext /System/Library/Extensions
+	echo "       --> ${BOLD}Installed FakePCIID_XHCIMux.kext to /System/Library/Extensions${OFF}"		
+
+	sudo cp -r ./kexts/IntelBacklight.kext /System/Library/Extensions
+	echo "       --> ${BOLD}Installed IntelBacklight.kext to /System/Library/Extensions${OFF}"
+
+	sudo cp -r ./kexts/NullEthernet.kext /System/Library/Extensions
+	echo "       --> ${BOLD}Installed NullEthernet.kext to /System/Library/Extensions${OFF}"
+
+	sudo cp -r ./kexts/XHCI-9-series.kext /System/Library/Extensions
+	echo "       --> ${BOLD}Installed XHCI-9-series.kext to /System/Library/Extensions${OFF}"	
+	
+	if [[ `ioreg -l | grep PXSX | grep compatible | grep -i pci14e4,43b1` == *"PXSX"* ]]
+	then
+		echo "${BLUE}[WIFI]${OFF}: ${BOLD}BCM94352HMB${OFF} wireless found"
+		sudo cp -r ./kexts/FakePCIID_Broadcom_WiFi.kext /System/Library/Extensions
+		echo "       --> ${BOLD}Installed FakePCIID_Broadcom_WiFi.kext to /System/Library/Extensions${OFF}"
+		sudo cp -r ./kexts/BrcmPatchRAM2.kext /System/Library/Extensions
+		echo "       --> ${BOLD}Installed BrcmPatchRAM2.kext to /System/Library/Extensions${OFF}"
+		sudo cp -r ./kexts/BrcmFirmwareRepo.kext /System/Library/Extensions
+		echo "       --> ${BOLD}Installed BrcmFirmwareRepo.kext to /System/Library/Extensions${OFF}"				
+	fi
+	echo "${GREEN}[INFO]${OFF}: Updating system caches..."
+	sudo kextcache -system-caches
+	sudo kextcache -system-prelinked-kernel
+	#One more time just to be safe?
+	sudo kextcache -system-caches
+}
 
 RETVAL=0
 
@@ -242,10 +286,10 @@ else
 			patch_dsdt
 			RETVAL=1
 			;;
-		--patch-hda)
-			patch_hda
+		--install-kexts)
+			install_kexts
 			RETVAL=1
-			;;
+			;;			
 		*)
 			clear
 			model_detected=0
@@ -268,7 +312,8 @@ else
 			echo "\t${BOLD}--update${OFF}: Update to latest version"
 			echo "\t${BOLD}--decompile-dsdt${OFF}: Decompile DSDT files in ./DSDT/raw"
 			echo "\t${BOLD}--patch-dsdt${OFF}: Patch DSDT files in ./DSDT/decompiled"
-			echo "\t${BOLD}--compile-dsdt${OFF}: Compile DSDT files to ./DSDT/compiled"	
+			echo "\t${BOLD}--compile-dsdt${OFF}: Compile DSDT files to ./DSDT/compiled"
+			echo "\t${BOLD}--install-kexts${OFF}: Install necessary kexts to /System/Library/Extensions"
 			echo
 			echo "${BOLD}Credits:"
 			echo "${BLUE}Laptop-DSDT${OFF}: https://github.com/RehabMan/Laptop-DSDT-Patch"
