@@ -260,7 +260,7 @@ install_kexts()
 	
 	if [[ `ioreg -l | grep PXSX | grep compatible | grep -i pci14e4,43b1` == *"PXSX"* ]]
 	then
-		echo "${BLUE}[WIFI]${OFF}: ${BOLD}BCM94352HMB${OFF} wireless found"
+		echo "${BLUE}[WIFI]${OFF}: ${BOLD}BCM94352Z${OFF} wireless found"
 		sudo cp -r ./kexts/FakePCIID_Broadcom_WiFi.kext /System/Library/Extensions
 		echo "       --> ${BOLD}Installed FakePCIID_Broadcom_WiFi.kext to /System/Library/Extensions${OFF}"
 		sudo cp -r ./kexts/BrcmPatchRAM2.kext /System/Library/Extensions
