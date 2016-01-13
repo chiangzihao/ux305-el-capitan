@@ -6,7 +6,6 @@ RED="\033[0;31m"
 GREEN="\033[0;32m"
 BLUE="\033[1;34m"
 OFF="\033[m"
-let gID=$(id -u)
 
 # Repository location
 REPO=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
@@ -15,6 +14,12 @@ GIT_DIR="${REPO}"
 # SSDT variables
 SSDT_DptfTabl=""
 SSDT_SaSsdt=""
+
+#Misc Variables
+model_detected=0
+let gID=$(id -u)
+prgen=0
+
 
 locate_ssdt()
 {
@@ -66,13 +71,11 @@ patch_dsdt()
 	echo "${BOLD}[rename] Rename B0D3 to HDAU${OFF}"
 	perl -p -i -e "s/B0D3/HDAU/g" ./DSDT/decompiled/*.dsl
 	
-
 	echo "${BLUE}[DSDT]${OFF}: Patching DSDT in ./DSDT/decompiled"
 
 	echo "${BOLD}[syn] Compiler Cleanup${OFF}"
 	./tools/patchmatic ./DSDT/decompiled/DSDT.dsl ./DSDT/patches/cleanup.txt ./DSDT/decompiled/DSDT.dsl
 
-	
 	echo "${BOLD}[sys] Remove _DSM Methods${OFF}"
 	./tools/patchmatic ./DSDT/decompiled/DSDT.dsl ./DSDT/patches/remove_dsm.txt ./DSDT/decompiled/DSDT.dsl
 
@@ -136,13 +139,16 @@ patch_dsdt()
 	########################
 
 	echo "${BLUE}[SSDT-DptfTabl]${OFF}: Patching ${SSDT_DptfTabl}"
+
+	echo "${BOLD}[rename] Rename GFX0 to IGPU${OFF}"	
+	echo "${BOLD}[rename] Rename B0D3 to HDAU${OFF}"		
+	#Super-ghetto. Replace later.
 	perl -p -i -e "s/External \(_SB_.PCI0.PEG0.PEGP.SGPO, MethodObj\)//g" ${SSDT_DptfTabl}
 
 	echo "${BOLD}[syn] Compiler Cleanup${OFF}"
 	./tools/patchmatic ${SSDT_DptfTabl} ./DSDT/patches/cleanup.txt ${SSDT_DptfTabl}
 
-
-	echo "${BOLD}_BST package size${OFF}"
+	echo "${BOLD}[sys] _BST package size${OFF}"
 	./tools/patchmatic ${SSDT_DptfTabl} ./DSDT/patches/_BST-package-size.txt ${SSDT_DptfTabl}
 
 	########################
@@ -150,6 +156,10 @@ patch_dsdt()
 	########################
 
 	echo "${BLUE}[SSDT-SaSsdt]${OFF}: Patching ${SSDT_SaSsdt}"
+
+	echo "${BOLD}[rename] Rename GFX0 to IGPU${OFF}"	
+	echo "${BOLD}[rename] Rename B0D3 to HDAU${OFF}"	
+	#This is super-ghetto, but should work for now.
 	perl -p -i -e "s/External \(_SB_.PCI0, DeviceObj\)//g" ${SSDT_SaSsdt}
 	perl -p -i -e "s/External \(_SB_.PCI0.PEG0, DeviceObj\)//g" ${SSDT_SaSsdt}
 	perl -p -i -e "s/External \(_SB_.PCI0.PEG0.PEGP, DeviceObj\)//g" ${SSDT_SaSsdt}
@@ -183,7 +193,7 @@ compile_dsdt()
 	# Additional custom SSDT
 	# ssdtPRgen (P-states / C-states)
 	echo "${BLUE}[PRgen]${OFF}: Compiling ssdtPRgen to ./DSDT/compiled"
-	prgen=0
+
 	#UX305LA i5
 	if [[ `sysctl machdep.cpu.brand_string` == *"i5-5200U"* ]]
 	then
@@ -242,12 +252,12 @@ install_kexts()
 
 	sudo cp -r ./kexts/AsusNBFnKeys.kext /System/Library/Extensions
 	echo "       --> ${BOLD}Installed AsusNBFnKeys.kext to /System/Library/Extensions${OFF}"
-
-	sudo cp -r ./kexts/FakePCIID.kext /System/Library/Extensions
-	echo "       --> ${BOLD}Installed FakePCIID.kext to /System/Library/Extensions${OFF}"
-
-	sudo cp -r ./kexts/FakePCIID_XHCIMux.kext /System/Library/Extensions
-	echo "       --> ${BOLD}Installed FakePCIID_XHCIMux.kext to /System/Library/Extensions${OFF}"		
+#Clover Injection
+#	sudo cp -r ./kexts/FakePCIID.kext /System/Library/Extensions
+#	echo "       --> ${BOLD}Installed FakePCIID.kext to /System/Library/Extensions${OFF}"
+#Clover Injection
+#	sudo cp -r ./kexts/FakePCIID_XHCIMux.kext /System/Library/Extensions
+#	echo "       --> ${BOLD}Installed FakePCIID_XHCIMux.kext to /System/Library/Extensions${OFF}"		
 
 	sudo cp -r ./kexts/IntelBacklight.kext /System/Library/Extensions
 	echo "       --> ${BOLD}Installed IntelBacklight.kext to /System/Library/Extensions${OFF}"
@@ -255,8 +265,12 @@ install_kexts()
 	sudo cp -r ./kexts/NullEthernet.kext /System/Library/Extensions
 	echo "       --> ${BOLD}Installed NullEthernet.kext to /System/Library/Extensions${OFF}"
 
-	sudo cp -r ./kexts/XHCI-9-series.kext /System/Library/Extensions
-	echo "       --> ${BOLD}Installed XHCI-9-series.kext to /System/Library/Extensions${OFF}"	
+#Clover Injection for now
+#	sudo cp -r ./kexts/XHCI-9-series.kext /System/Library/Extensions
+#	echo "       --> ${BOLD}Installed XHCI-9-series.kext to /System/Library/Extensions${OFF}"
+
+	sudo cp -r ./kexts/FaceTimeHDCam.kext /System/Library/Extensions
+	echo "       --> ${BOLD}Installed FaceTimeHDCam.kext to /System/Library/Extensions${OFF}"		
 	
 	if [[ `ioreg -l | grep PXSX | grep compatible | grep -i pci14e4,43b1` == *"PXSX"* ]]
 	then
@@ -268,11 +282,9 @@ install_kexts()
 		sudo cp -r ./kexts/BrcmFirmwareRepo.kext /System/Library/Extensions
 		echo "       --> ${BOLD}Installed BrcmFirmwareRepo.kext to /System/Library/Extensions${OFF}"				
 	fi
-	echo "${GREEN}[INFO]${OFF}: Updating system caches..."
-	sudo kextcache -system-caches
-	sudo kextcache -system-prelinked-kernel
-	#One more time just to be safe?
-	sudo kextcache -system-caches
+	echo "${GREEN}[INFO]${OFF}: Opening Kext Utility to update system caches..."
+	sudo touch /System/Library/Extensions
+	sudo open ./tools/Kext\ Utility.app
 }
 
 RETVAL=0
@@ -304,15 +316,13 @@ else
 			install_kexts
 			RETVAL=1
 			;;			
-		*)
-			clear
-			model_detected=0
+		*)			
 			if [[ `sysctl machdep.cpu.brand_string` == *"i5-5200U"* ]]
 			then
 				model_detected=1
 				echo "${GREEN}${BOLD}Model Detected: Asus UX305LA i5${OFF}"
 			fi
-			if [[ `sysctl machdep.cpu.brand_string` == *"i5-5200U"* ]]
+			if [[ `sysctl machdep.cpu.brand_string` == *"i3-5010U"* ]]
 			then
 				model_detected=1
 				echo "${GREEN}${BOLD}Model Detected: Asus UX305LA i3${OFF}"
