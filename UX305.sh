@@ -236,8 +236,9 @@ patch_hda()
 	echo "${GREEN}[HDA]${OFF}: Creating AppleHDA injection kernel extension for ${BOLD}CX20752${OFF}"
 	sudo cp -r ./audio/UX305_AppleHDA.kext /System/Library/Extensions
 	echo "       --> ${BOLD}Installed UX305_AppleHDA.kext to /System/Library/Extensions${OFF}"
-	sudo cp -r ./audio/CodecCommander.kext /System/Library/Extensions
-	echo "       --> ${BOLD}Installed CodecCommander.kext to /System/Library/Extensions${OFF}"
+	#Don't think this is needed for now.
+	#sudo cp -r ./audio/CodecCommander.kext /System/Library/Extensions
+	#echo "       --> ${BOLD}Installed CodecCommander.kext to /System/Library/Extensions${OFF}"
 }
 
 install_kexts()
@@ -282,9 +283,8 @@ install_kexts()
 		sudo cp -r ./kexts/BrcmFirmwareRepo.kext /System/Library/Extensions
 		echo "       --> ${BOLD}Installed BrcmFirmwareRepo.kext to /System/Library/Extensions${OFF}"				
 	fi
-	echo "${GREEN}[INFO]${OFF}: Opening Kext Utility to update system caches..."
-	sudo touch /System/Library/Extensions
-	sudo open ./tools/Kext\ Utility.app
+	echo "${GREEN}[INFO]${OFF}: Update system caches..."
+	sudo touch /System/Library/Extensions && kextcache -u /
 }
 
 RETVAL=0
