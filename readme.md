@@ -11,9 +11,9 @@ Component | Status | Notes
 --------- | ------ |------
 Intel Graphics|Working|
 USB2/USB3|Working|FakePCIID_XHCIMux and DSDT edits
-Intel Wireless|<mark>Unsupported</mark>|**UX305LA:** Wireless card is soldered. USB wifi required. **UX305FA:** Can be replaced with BCM94352Z. (Dell part number 06XRYC)
+Intel Wireless|Unsupported|**UX305LA:** Wireless card is soldered. USB wifi required. **UX305FA:** Can be replaced with BCM94352Z. (Dell part number 06XRYC)
 SDXC Card Reader|Working|
-Audio (CX20752)|<mark>Partial</mark>|**AppleHDA:** Internal microphone and line in aren't working. **VoodooHDA:** Mic/line in work, but no jack sense when plugging in headphones. **HDMI Audio:** Work in progress.
+Audio (CX20752)|Partial|**AppleHDA:** Internal microphone and line in aren't working. **VoodooHDA:** Mic/line in work, but no jack sense when plugging in headphones. **HDMI Audio:** Work in progress.
 Ambient Light Sensor|Working|
 Trackpad|Working|ELAN Touchpad. Using ApplePS2SmartTouchPad
 
