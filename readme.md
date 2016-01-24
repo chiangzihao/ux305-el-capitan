@@ -17,7 +17,7 @@ Audio (CX20752)|Partial|**AppleHDA:** Internal microphone and line in aren't wor
 Ambient Light Sensor|Working|
 Trackpad|Working|ELAN Touchpad. Using ApplePS2SmartTouchPad
 
-## BIOS Settings
+## Step 1: BIOS Settings
 
 ### Advanced
 
