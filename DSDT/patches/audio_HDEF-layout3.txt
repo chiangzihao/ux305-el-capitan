@@ -12,7 +12,7 @@ Method (_DSM, 4, NotSerialized)\n
     Return (Package()\n
     {\n
         "AAPL,slot-name", Buffer() { "Built in" },\n
-        "layout-id", Buffer() { 0x03, 0x00, 0x00, 0x00 },\n
+        "layout-id", Buffer() { 28, 0x00, 0x00, 0x00 },\n
         "device_type", Buffer() { "Audio Controller" },\n
         "built-in", Buffer() { 0x00 },\n
         "PinConfigurations", Buffer() { },\n
